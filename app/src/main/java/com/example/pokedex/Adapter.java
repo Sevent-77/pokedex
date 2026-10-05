@@ -1,5 +1,8 @@
 package com.example.pokedex;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,15 +16,13 @@ import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
-public class Adapter
-        extends RecyclerView.Adapter<Adapter.MyViewHolder> {
+public class Adapter extends RecyclerView.Adapter<Adapter.MyViewHolder> {
 
-    private final ArrayList<Pokemon> list;
+    private ArrayList<Pokemon> list;
     private OnItemClickListener listener;
 
     public interface OnItemClickListener {
         void onItemClick(int position);
-
         void onItemLongClick(int position);
     }
 
@@ -29,44 +30,26 @@ public class Adapter
         this.list = list;
     }
 
-    public void setOnItemClickListener(
-            OnItemClickListener listener
-    ) {
+    public void setOnItemClickListener(OnItemClickListener listener) {
         this.listener = listener;
     }
 
     @NonNull
     @Override
-    public MyViewHolder onCreateViewHolder(
-            @NonNull ViewGroup parent,
-            int viewType
-    ) {
-        View itemView = LayoutInflater
-                .from(parent.getContext())
-                .inflate(
-                        R.layout.item_pokemon,
-                        parent,
-                        false
-                );
-
-        return new MyViewHolder(itemView);
+    public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View itemLista = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_pokemon, parent, false);
+        return new MyViewHolder(itemLista);
     }
 
     @Override
-    public void onBindViewHolder(
-            @NonNull MyViewHolder holder,
-            int position
-    ) {
-        Pokemon pokemon = list.get(position);
-
-        holder.txtNome.setText(pokemon.getNome());
-        holder.textType.setText(pokemon.getTipo());
-        holder.textDescription.setText(
-                pokemon.getDescricao()
-        );
+    public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
+        holder.txtNome.setText(list.get(position).getNome());
+        holder.textType.setText(list.get(position).getTipo());
+        holder.textDescription.setText(list.get(position).getDescricao());
 
         Glide.with(holder.itemView)
-                .load(pokemon.getImagem())
+                .load(list.get(position).getImagem())
                 .placeholder(R.drawable.symbol)
                 .error(R.drawable.symbol)
                 .into(holder.imgAvatar);
@@ -79,57 +62,74 @@ public class Adapter
 
     class MyViewHolder extends RecyclerView.ViewHolder {
 
-        final TextView txtNome;
-        final TextView textType;
-        final TextView textDescription;
-        final ImageView imgAvatar;
+        TextView txtNome;
+        TextView textType;
+        TextView textDescription;
+        ImageView imgAvatar;
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            txtNome = itemView.findViewById(
-                    R.id.txtNome
-            );
+            txtNome = itemView.findViewById(R.id.txtNome);
+            textType = itemView.findViewById(R.id.textType);
+            textDescription = itemView.findViewById(R.id.textDescription);
+            imgAvatar = itemView.findViewById(R.id.imgAvatar);
 
-            textType = itemView.findViewById(
-                    R.id.textType
-            );
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    int position = getBindingAdapterPosition();
 
-            textDescription = itemView.findViewById(
-                    R.id.textDescription
-            );
+                    if (position == RecyclerView.NO_POSITION) {
+                        return;
+                    }
 
-            imgAvatar = itemView.findViewById(
-                    R.id.imgAvatar
-            );
+                    if (listener != null) {
+                        listener.onItemClick(position);
+                    }
 
-            itemView.setOnClickListener(view -> {
-                if (listener == null) {
-                    return;
-                }
-
-                int position =
-                        getBindingAdapterPosition();
-
-                if (position != RecyclerView.NO_POSITION) {
-                    listener.onItemClick(position);
+                    Intent intent = new Intent(view.getContext(), Description.class);
+                    intent.putExtra("Nome", list.get(position).getNome());
+                    intent.putExtra("Tipo", list.get(position).getTipo());
+                    intent.putExtra("Imagem", list.get(position).getImagem());
+                    intent.putExtra("Descricao", list.get(position).getDescricao());
+                    view.getContext().startActivity(intent);
                 }
             });
 
-            itemView.setOnLongClickListener(view -> {
-                if (listener == null) {
-                    return false;
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    int position = getBindingAdapterPosition();
+
+                    if (position == RecyclerView.NO_POSITION) {
+                        return false;
+                    }
+
+                    Pokemon pokemon = list.get(position);
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+
+                    builder.setTitle("Excluir");
+                    builder.setMessage("Você tem certeza que deseja excluir o Pokémon " + pokemon.getNome() + "?");
+
+                    builder.setPositiveButton("Sim", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            int currentPosition = getBindingAdapterPosition();
+
+                            if (currentPosition != RecyclerView.NO_POSITION) {
+                                list.remove(currentPosition);
+                                notifyItemRemoved(currentPosition);
+                            }
+                        }
+                    });
+
+                    builder.setNegativeButton("Não", null);
+                    builder.show();
+
+                    return true;
                 }
-
-                int position =
-                        getBindingAdapterPosition();
-
-                if (position == RecyclerView.NO_POSITION) {
-                    return false;
-                }
-
-                listener.onItemLongClick(position);
-                return true;
             });
         }
     }
