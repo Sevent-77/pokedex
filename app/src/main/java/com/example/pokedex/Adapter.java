@@ -1,5 +1,7 @@
 package com.example.pokedex;
 
+import com.example.pokedex.model.Pokemon;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;

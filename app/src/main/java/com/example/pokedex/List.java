@@ -1,5 +1,7 @@
 package com.example.pokedex;
 
+import com.example.pokedex.model.Pokemon;
+
 import android.os.Bundle;
 import android.view.View;
 

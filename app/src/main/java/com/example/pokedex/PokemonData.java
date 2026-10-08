@@ -1,5 +1,7 @@
 package com.example.pokedex;
 
+import com.example.pokedex.model.Pokemon;
+
 import java.util.ArrayList;
 
 public class PokemonData {
